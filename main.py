@@ -20,7 +20,6 @@ dataset['feature_names'] = [
     "population",
     "households",
     "median_income",
-    "median_house_value",
     "ocean_proximity_is_1h_ocean",
     "ocean_proximity_is_inland",
     "ocean_proximity_is_island",
@@ -57,7 +56,7 @@ proximity_values = sorted(list(set(data_proximity)))
 data_proximity = [[int(value == entry) for value in proximity_values] for entry in data_proximity]
 
 # making median house value the target and separating it from the data
-target_index = dataset['feature_names'].index('median_house_value')
+target_index = 8
 clean_data = [line[:target_index] + line[(target_index + 1):] for line in data]
 target = [line[target_index] for line in data]
 
