@@ -64,8 +64,15 @@ target = [line[target_index] for line in data]
 dataset['data'] = np.array([clean_data[i] + data_proximity[i] for i in range(len(data))])
 dataset['target'] = np.array(target)
 
+# creating the dataset without geographical coordinates (ng - no geo)
+dataset_ng = {}
+dataset_ng['feature_names'] = np.array(dataset['feature_names'][2:])
+dataset_ng['data'] = np.array([x[2:] for x in dataset['data']])
+dataset_ng['target'] = dataset['target']
+
 # splitting the dataset into training and testing parts
 X_train, X_test, y_train, y_test = train_test_split(dataset['data'], dataset['target'], random_state=0)
+X_train_ng, X_test_ng, y_train_ng, y_test_ng = train_test_split(dataset_ng['data'], dataset_ng['target'], random_state=0)
 
 # training the regression model
 
@@ -77,9 +84,15 @@ X_train, X_test, y_train, y_test = train_test_split(dataset['data'], dataset['ta
 forest = RandomForestRegressor(n_estimators=15, random_state=0, max_features=10)
 forest.fit(X_train, y_train)
 
+forest_ng = RandomForestRegressor(n_estimators=15, random_state=0, max_features=10)
+forest_ng.fit(X_train_ng, y_train_ng)
+
 # showing the model score
-print("Training set score: {:.3f}".format(forest.score(X_train, y_train)))
-print("Test set score: {:.3f}".format(forest.score(X_test, y_test)))
+print("Training set score with geo: {:.3f}".format(forest.score(X_train, y_train)))
+print("Test set score with geo: {:.3f}".format(forest.score(X_test, y_test)))
+
+print("Training set score WITHOUT geo: {:.3f}".format(forest_ng.score(X_train_ng, y_train_ng)))
+print("Test set score WITHOUT geo: {:.3f}".format(forest_ng.score(X_test_ng, y_test_ng)))
 
 # calculating feature importances
 importances = forest.feature_importances_
@@ -87,14 +100,14 @@ std = np.std([tree.feature_importances_ for tree in forest.estimators_], axis=0)
 indices = np.argsort(importances)[::-1]
 
 # printing feature importance ranking
-print("Feature ranking:")
+print("Feature ranking of model with geo:")
 
 for f in range(dataset['data'].shape[1]):
     print("{0}. {1} - {2}".format(f + 1, dataset['feature_names'][indices[f]], importances[indices[f]]))
 
 # plotting feature importances of the forest
 plt.figure()
-plt.title("Feature importances")
+plt.title("Feature importances of model with geo")
 plt.bar(range(dataset['data'].shape[1]), importances[indices],
        color="b", yerr=std[indices], align="center")
 plt.xticks(range(dataset['data'].shape[1]), indices)
