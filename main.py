@@ -1,7 +1,7 @@
 import numpy as np
 import sklearn
 
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import Ridge, LinearRegression, Lasso
 from sklearn.model_selection import train_test_split
 
 FILENAME = "california_housing.csv"
@@ -18,6 +18,7 @@ lines = lines[1:]
 # removing ocean proximity to handle it separately
 data = [line[:-1] for line in lines]
 
+# parsing and setting nonexistant values to -1
 def float_or_null(x):
     a = None
     try:
@@ -26,14 +27,16 @@ def float_or_null(x):
         a = -1
     return a
 
-# parsing and setting nonexistant values to -1
 data = [[float_or_null(x) for x in line] for line in data]
 
 # handling ocean proximity
 data_proximity = [line[-1] for line in lines]
 proximity_values = sorted(list(set(data_proximity)))
 
-# expanding ocean proximity classification integer into sparse array
+# expanding ocean proximity classification string into a sparse array
+# that means we're separating one feature (ocean proximity) into multiple
+# for example the string 'NEAR BAY' gets converted to a data point that looks like this - [0, 0, 0, 1, 0]
+# why? because the string is a classification and not a continuous data point
 data_proximity = [[int(value == entry) for value in proximity_values] for entry in data_proximity]
 
 # making median house value the target and separating it from the data
@@ -45,25 +48,29 @@ target = [line[target_index] for line in data]
 dataset['data'] = np.array([clean_data[i] + data_proximity[i] for i in range(len(data))])
 dataset['target'] = np.array(target)
 
-print(dataset['data'][100])
-print(dataset['target'][100])
+# splitting the dataset into training and testing parts
+X_train, X_test, y_train, y_test = train_test_split(dataset['data'], dataset['target'], random_state=0)
 
-# lines = [[int(x) for x in line] for line in lines]
+# training the regression model
+linreg = LinearRegression()
+linreg.fit(X_train, y_train)
 
-# dataset = {}
-# dataset['data'] = np.array([line[:-1] for line in lines])
-# dataset['target'] = np.array([line[-1] for line in lines])
+# showing the model score
+print("linreg Training set score: {:.3f}".format(linreg.score(X_train, y_train)))
+print("linreg Test set score: {:.3f}".format(linreg.score(X_test, y_test)))
 
-# # splitting the dataset into training and testing parts
+# training the regression model
+ridge = Ridge(alpha=100)
+ridge.fit(X_train, y_train)
 
-# X_train, X_test, y_train, y_test = train_test_split(dataset['data'], dataset['target'], random_state=0)
+# showing the model score
+print("ridge Training set score: {:.3f}".format(ridge.score(X_train, y_train)))
+print("ridge Test set score: {:.3f}".format(ridge.score(X_test, y_test)))
 
-# # training the logistic regression model
+# training the regression model
+lasso = Lasso()
+lasso.fit(X_train, y_train)
 
-# logreg = LogisticRegression(C=10, solver='lbfgs', max_iter=10000, multi_class='auto')
-# logreg.fit(X_train, y_train)
-
-# # showing the model score
-
-# print("Training set score: {:.3f}".format(logreg.score(X_train, y_train)))
-# print("Test set score: {:.3f}".format(logreg.score(X_test, y_test)))
+# showing the model score
+print("lasso Training set score: {:.3f}".format(lasso.score(X_train, y_train)))
+print("lasso Test set score: {:.3f}".format(lasso.score(X_test, y_test)))
